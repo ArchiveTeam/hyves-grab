@@ -73,12 +73,14 @@ wget.callbacks.get_urls = function(file, url, is_css, iri)
   local html = nil
   local hostname = string.match(url, "http://([^/]+)")
 
-  if string.match(url, "hyves.nl/friends/") then
-    -- paginate the friends (quickfinder_member_friends)
-    html = read_file(file)
-    add_urls_from_pager(html, urls, hostname)
-  elseif string.match(url, "hyves.nl/fotos/") or string.match(url, "hyves.nl/photos/") then
-    -- paginate the photos (albumlistwithpreview)
+  -- paginate the friends (quickfinder_member_friends)
+  if string.match(url, "hyves.nl/friends/") or
+  -- paginate the photos (albumlistwithpreview)
+  string.match(url, "hyves.nl/fotos/") or string.match(url, "hyves.nl/photos/") or
+  -- paginate the group members (quickfinder_hub_members)
+  string.match(url, "hyves.nl/members/") or
+  -- paginate the blog (blog_mainbody / hub_content)
+  string.match(url, "hyves.nl/blog/") then
     html = read_file(file)
     add_urls_from_pager(html, urls, hostname)
   end
