@@ -139,7 +139,7 @@ wget.callbacks.get_urls = function(file, url, is_css, iri)
     add_urls_from_pager(html, urls, hostname, url)
   end
 
-  -- TODO: paginate other stuff
+  -- TODO: check to see if we need to paginate other stuff
 
   -- scrape out the urls from the html fragment from the pagination request
   -- or urls from the html fragment of the photo comments
@@ -156,15 +156,15 @@ wget.callbacks.get_urls = function(file, url, is_css, iri)
     end
   end
 
-  -- grab large size photos (change 16 into a 6 ??) from photo album only
-  -- TODO: check referer to see if we are coming from an album and not friend profile pic
+  -- grab large size photos (change 16 into a 6 ???) from photo album only
+  -- TODO: check referer to see if we are coming from an album and not from a friend profile pic
   if string.match(url, "http://[0-9].media.hyves%-static.net/[0-9]+/16/[%w_-]+/[0-9]+/[%w.]+") then
     local hostnum, img_id, secret, something, filename = string.match(url, "http://([0-9]).media.hyves%-static.net/([0-9]+)/16/([%w_-]+)/([0-9]+)/([%w.]+)")
     local photo_url = "http://"..hostnum..".media.hyves-static.net/"..img_id.."/6/"..secret.."/"..something.."/"..filename
     table.insert(urls, { url=photo_url })
     new_url_count = new_url_count + 1
 
-    -- grab the photo comments and the "respects" from the html fragment
+    -- grab the html fragment containing the photo comments and the "respects"
     local photo_meta_url = "http://hyves.nl/?module=PhotoBrowser&action=postGetSocialPage"
     -- the order of these fields actually matters..
     -- the secret should be same as GP cookie value
