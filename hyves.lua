@@ -121,5 +121,7 @@ wget.callbacks.get_urls = function(file, url, is_css, iri)
   -- TODO: paginate other stuff
   -- TODO: check if wget will parse out the urls from the html fragment from the pagination request
   -- TODO: grab photos
+
+  return urls
 end
 
