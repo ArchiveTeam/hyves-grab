@@ -2,6 +2,7 @@ dofile("urlcode.lua")
 
 local url_count = 0
 local new_url_count = 0
+local hyves_username = os.getenv("hyves_username")
 
 read_file = function(file)
   if file then
@@ -156,8 +157,10 @@ wget.callbacks.get_urls = function(file, url, is_css, iri)
     end
   end
 
-  -- grab large size photos (change 16 into a 6 ???) from photo album only
-  -- TODO: check referer to see if we are coming from an album and not from a friend profile pic
+  -- Grab large size photos (change 16 into a 6 ???) from photo album only.
+  -- TODO: check referer to see if we are coming from an album and not from a
+  -- photo comment page. Getting the comment page on an image from a comment
+  -- page would be recursion across users.
   if string.match(url, "http://[0-9].media.hyves%-static.net/[0-9]+/16/[%w_-]+/[0-9]+/[%w.]+") then
     local hostnum, img_id, secret, something, filename = string.match(url, "http://([0-9]).media.hyves%-static.net/([0-9]+)/16/([%w_-]+)/([0-9]+)/([%w.]+)")
     local photo_url = "http://"..hostnum..".media.hyves-static.net/"..img_id.."/6/"..secret.."/"..something.."/"..filename
@@ -165,7 +168,7 @@ wget.callbacks.get_urls = function(file, url, is_css, iri)
     new_url_count = new_url_count + 1
 
     -- grab the html fragment containing the photo comments and the "respects"
-    local photo_meta_url = "http://hyves.nl/?module=PhotoBrowser&action=postGetSocialPage"
+    local photo_meta_url = "http://"..hyves_username..".hyves.nl/?module=PhotoBrowser&action=postGetSocialPage"
     -- the order of these fields actually matters..
     -- the secret should be same as GP cookie value
     local post_data_fields = "itemType=4&postman_secret=deadbeef&itemApiId=&itemId="..img_id.."&itemSecret="..secret

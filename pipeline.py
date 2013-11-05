@@ -183,6 +183,7 @@ pipeline = Pipeline(
         ],
         max_tries=5,
         accept_on_exit_code=[0, 8],
+        env={'hyves_username': ItemInterpolation("%(item_name)s")}
     ),
     PrepareStatsForTracker(
         defaults={ "downloader": downloader, "version": VERSION },
