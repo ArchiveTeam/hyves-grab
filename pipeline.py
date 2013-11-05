@@ -96,7 +96,7 @@ USER_AGENT = "Mozilla/5.0 (Windows NT 6.1; WOW64) AppleWebKit/537.36 (KHTML, lik
 # TRACKER_ID = 'hyves'
 TRACKER_ID = 'test'
 # TRACKER_HOST = 'tracker.archiveteam.org'
-TRACKER_HOST = 'localhost:8043'
+TRACKER_HOST = 'localhost:8030'
 
 
 ###########################################################################
@@ -175,7 +175,7 @@ pipeline = Pipeline(
         "--wait", "0.75",
         "--random-wait",
         "--span-hosts",
-        "--domains", ItemInterpolation("%(item_name)s.hyves.net,hyves-static.net"),
+        "--domains", ItemInterpolation("%(item_name)s.hyves.nl,hyves-static.net"),
         "--warc-file", ItemInterpolation("%(item_dir)s/%(warc_file_base)s"),
         "--warc-header", "operator: Archive Team",
         "--warc-header", "hyves-dld-script-version: " + VERSION,
@@ -183,7 +183,7 @@ pipeline = Pipeline(
         ItemInterpolation("http://%(item_name)s.hyves.nl/")
         ],
         max_tries=5,
-        accept_on_exit_code=[0],
+        accept_on_exit_code=[0, 8],
     ),
     PrepareStatsForTracker(
         defaults={ "downloader": downloader, "version": VERSION },

@@ -1,3 +1,5 @@
+dofile("urlcode.lua")
+
 local url_count = 0
 local new_url_count = 0
 
@@ -6,7 +8,7 @@ read_file = function(file)
     local f = io.open(file)
     local data = f:read("*all")
     f:close()
-    return data
+    return data or ""
   else
     return ""
   end
@@ -17,7 +19,7 @@ read_file_short = function(file)
     local f = io.open(file)
     local data = f:read(4096)
     f:close()
-    return data
+    return data or ""
   else
     return ""
   end
@@ -49,10 +51,16 @@ function range(a, b, step)
   return f, nil, a - step
 end
 
-add_urls_from_pager = function(html, urls, hostname)
-  local name = string.match(html, "name: '([^']+)'")
-  local num_pages = to_number(html, string.match("nrPages: ([0-9]+)"))
-  local extra = string.match(html, "extra: '([^']+)'")
+add_urls_from_pager = function(html, urls, hostname, current_url)
+  local name = string.match(html, "name:%s*'([^']+)'")
+  local num_pages = tonumber(string.match(html, "nrPages:%s*([0-9]+)"))
+  local extra = string.match(html, "extra:%s*'([^']+)'")
+  
+  if not name or not num_pages or not extra then
+    io.stdout:write("\nPager error!: url="..current_url.." name="..tostring(name).." num_pages="..tostring(num_pages).." extra="..tostring(extra).."\n")
+    io.stdout:flush()
+    return
+  end
 
   for page_number in range(1, num_pages) do
 
@@ -78,6 +86,7 @@ wget.callbacks.httploop_result = function(url, err, http_stat)
 
   if string.match(html, "Try again in a moment") then
     io.stdout:write("\nHyves angered (code "..http_stat.statcode.."). Sleeping for ".. sleep_time .." seconds.\n")
+    io.stdout:flush()
     os.execute("sleep " .. sleep_time)
     return wget.actions.CONTINUE
   end
@@ -106,7 +115,7 @@ wget.callbacks.get_urls = function(file, url, is_css, iri)
   -- paginate the blog (blog_mainbody / hub_content)
   string.match(url, "hyves.nl/blog/") then
     html = read_file(file)
-    add_urls_from_pager(html, urls, hostname)
+    add_urls_from_pager(html, urls, hostname, url)
   end
 
   -- TODO: paginate other stuff
