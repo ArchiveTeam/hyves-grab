@@ -55,9 +55,9 @@ add_urls_from_pager = function(html, urls, hostname, current_url)
   local name = string.match(html, "name:%s*'([^']+)'")
   local num_pages = tonumber(string.match(html, "nrPages:%s*([0-9]+)"))
   local extra = string.match(html, "extra:%s*'([^']+)'")
-  
+
   if not name or not num_pages or not extra then
-    io.stdout:write("\nPager error!: url="..current_url.." name="..tostring(name).." num_pages="..tostring(num_pages).." extra="..tostring(extra).."\n")
+    io.stdout:write("\nPager not found: url="..current_url.." name="..tostring(name).." num_pages="..tostring(num_pages).." extra="..tostring(extra).."\n")
     io.stdout:flush()
     return
   end
@@ -114,12 +114,27 @@ wget.callbacks.get_urls = function(file, url, is_css, iri)
   string.match(url, "hyves.nl/leden/") or string.match(url, "hyves.nl/members/") or
   -- paginate the blog (blog_mainbody / hub_content)
   string.match(url, "hyves.nl/blog/") then
-    html = read_file(file)
+    if not html then
+      html = read_file(file)
+    end
     add_urls_from_pager(html, urls, hostname, url)
   end
 
   -- TODO: paginate other stuff
-  -- TODO: check if wget will parse out the urls from the html fragment from the pagination request
+
+  -- scrape out the urls from the html fragment from the pagination request
+  if string.match(url, "/index.php%?xmlHttp=1&module=pager") then
+    if not html then
+      html = read_file(file)
+    end
+    for requisite_url in string.gmatch(html, "=['\"](http[%w%.:/-]+hyves%-static%.net[^'\"]+)['\"]") do
+      table.insert(urls, { url=requisite_url })
+--      io.stdout:write("\nPager new url="..requisite_url.."\n")
+--      io.stdout:flush()
+      new_url_count = new_url_count + 1
+    end
+  end
+
   -- TODO: grab photos
 
   return urls
