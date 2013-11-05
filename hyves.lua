@@ -74,11 +74,11 @@ wget.callbacks.get_urls = function(file, url, is_css, iri)
   local hostname = string.match(url, "http://([^/]+)")
 
   -- paginate the friends (quickfinder_member_friends)
-  if string.match(url, "hyves.nl/friends/") or
+  if string.match(url, "hyves.nl/vrienden/") or string.match(url, "hyves.nl/friends/") or
   -- paginate the photos (albumlistwithpreview)
   string.match(url, "hyves.nl/fotos/") or string.match(url, "hyves.nl/photos/") or
   -- paginate the group members (quickfinder_hub_members)
-  string.match(url, "hyves.nl/members/") or
+  string.match(url, "hyves.nl/leden/") or string.match(url, "hyves.nl/members/") or
   -- paginate the blog (blog_mainbody / hub_content)
   string.match(url, "hyves.nl/blog/") then
     html = read_file(file)
