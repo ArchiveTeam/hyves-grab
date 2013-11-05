@@ -80,6 +80,25 @@ add_urls_from_pager = function(html, urls, hostname, current_url)
   end
 end
 
+wget.callbacks.download_child_p = function(urlpos, parent, depth, start_url_parsed, iri, verdict, reason)
+  if verdict then
+    local sleep_time = 0.75 * (math.random(50, 150) / 100.0)
+
+    if string.match(urlpos["url"]["url"], "hyves%-static.net") then
+      -- We should be able to go fast on images since that's what a web browser does
+      sleep_time = 0
+    end
+
+    if sleep_time > 0.001 then
+      --    io.stdout:write("\nSleeping=".. sleep_time .." url="..urlpos["url"]["url"].." verdict="..tostring(verdict).."\n")
+      --    io.stdout:flush()
+      os.execute("sleep " .. sleep_time)
+    end
+  end
+
+  return verdict
+end
+
 wget.callbacks.httploop_result = function(url, err, http_stat)
   local html = read_file_short(http_stat["local_file"])
   local sleep_time = 10

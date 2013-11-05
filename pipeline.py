@@ -171,8 +171,6 @@ pipeline = Pipeline(
         "--page-requisites",
         "--timeout", "60",
         "--tries", "20",
-        "--waitretry", "10",
-        "--wait", "0.75",
         "--random-wait",
         "--span-hosts",
         "--no-cookies", "--header", "Cookie: GP=deadbeef",
