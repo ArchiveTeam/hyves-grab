@@ -12,6 +12,18 @@ read_file = function(file)
   end
 end
 
+read_file_short = function(file)
+  if file then
+    local f = io.open(file)
+    local data = f:read(4096)
+    f:close()
+    return data
+  else
+    return ""
+  end
+end
+
+
 -- range(a) returns an iterator from 1 to a (step = 1)
 -- range(a, b) returns an iterator from a to b (step = 1)
 -- range(a, b, step) returns an iterator from a to b, counting by step.
@@ -60,14 +72,26 @@ add_urls_from_pager = function(html, urls, hostname)
   end
 end
 
+wget.callbacks.httploop_result = function(url, err, http_stat)
+  local html = read_file_short(http_stat["local_file"])
+  local sleep_time = 10
+
+  if string.match(html, "Try again in a moment") then
+    io.stdout:write("\nHyves angered (code "..http_stat.statcode.."). Sleeping for ".. sleep_time .." seconds.\n")
+    os.execute("sleep " .. sleep_time)
+    return wget.actions.CONTINUE
+  end
+
+  return wget.actions.NOTHING
+end
+
 wget.callbacks.get_urls = function(file, url, is_css, iri)
   -- progress message
   url_count = url_count + 1
   if url_count % 5 == 0 then
-    io.stdout:write("\r - Downloaded "..url_count.." URLs. Discovered "..new_url_count.." URLs")
+    io.stdout:write("\r - Downloaded "..url_count.." URLs. Discovered "..new_url_count.." URLs.")
     io.stdout:flush()
   end
-
 
   local urls = {}
   local html = nil
@@ -86,7 +110,6 @@ wget.callbacks.get_urls = function(file, url, is_css, iri)
   end
 
   -- TODO: paginate other stuff
-  -- TODO: check throttle
   -- TODO: check if wget will parse out the urls from the html fragment from the pagination request
   -- TODO: grab photos
 end

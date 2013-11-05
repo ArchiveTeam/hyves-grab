@@ -172,6 +172,8 @@ pipeline = Pipeline(
         "--timeout", "60",
         "--tries", "20",
         "--waitretry", "10",
+        "--wait", "0.75",
+        "--random-wait",
         "--span-hosts",
         "--domains", ItemInterpolation("%(item_name)s.hyves.net,hyves-static.net"),
         "--warc-file", ItemInterpolation("%(item_dir)s/%(warc_file_base)s"),
