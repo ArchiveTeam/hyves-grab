@@ -123,19 +123,41 @@ wget.callbacks.get_urls = function(file, url, is_css, iri)
   -- TODO: paginate other stuff
 
   -- scrape out the urls from the html fragment from the pagination request
-  if string.match(url, "/index.php%?xmlHttp=1&module=pager") then
+  -- or urls from the html fragment of the photo comments
+  if string.match(url, "/index.php%?xmlHttp=1&module=pager") or
+  string.match(url, "module=PhotoBrowser&action=postGetSocialPage") then
     if not html then
       html = read_file(file)
     end
     for requisite_url in string.gmatch(html, "=['\"](http[%w%.:/-]+hyves%-static%.net[^'\"]+)['\"]") do
       table.insert(urls, { url=requisite_url })
---      io.stdout:write("\nPager new url="..requisite_url.."\n")
---      io.stdout:flush()
+      --      io.stdout:write("\nPager new url="..requisite_url.."\n")
+      --      io.stdout:flush()
       new_url_count = new_url_count + 1
     end
   end
 
-  -- TODO: grab photos
+  -- grab large size photos (change 16 into a 6 ??) from photo album only
+  -- TODO: check referer to see if we are coming from an album and not friend profile pic
+  if string.match(url, "http://[0-9].media.hyves%-static.net/[0-9]+/16/[%w_-]+/[0-9]+/[%w.]+") then
+    local hostnum, img_id, secret, something, filename = string.match(url, "http://([0-9]).media.hyves%-static.net/([0-9]+)/16/([%w_-]+)/([0-9]+)/([%w.]+)")
+    local photo_url = "http://"..hostnum..".media.hyves-static.net/"..img_id.."/6/"..secret.."/"..something.."/"..filename
+    table.insert(urls, { url=photo_url })
+    new_url_count = new_url_count + 1
+
+    -- grab the photo comments and the "respects" from the html fragment
+    local photo_meta_url = "http://hyves.nl/?module=PhotoBrowser&action=postGetSocialPage"
+    -- the order of these fields actually matters..
+    -- the secret should be same as GP cookie value
+    local post_data_fields = "itemType=4&postman_secret=deadbeef&itemApiId=&itemId="..img_id.."&itemSecret="..secret
+
+    table.insert(urls, {
+      url=photo_meta_url,
+      post_data=post_data_fields
+    })
+
+    new_url_count = new_url_count + 1
+  end
 
   return urls
 end

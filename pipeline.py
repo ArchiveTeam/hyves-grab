@@ -175,6 +175,7 @@ pipeline = Pipeline(
         "--wait", "0.75",
         "--random-wait",
         "--span-hosts",
+        "--no-cookies", "--header", "Cookie: GP=deadbeef",
         "--domains", ItemInterpolation("%(item_name)s.hyves.nl,hyves-static.net"),
         "--warc-file", ItemInterpolation("%(item_dir)s/%(warc_file_base)s"),
         "--warc-header", "operator: Archive Team",
