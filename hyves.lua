@@ -188,7 +188,7 @@ wget.callbacks.get_urls = function(file, url, is_css, iri)
     -- grab the html fragment containing the photo comments and the "respects"
     local photo_meta_url = "http://"..hyves_username..".hyves.nl/?module=PhotoBrowser&action=postGetSocialPage"
     -- the order of these fields actually matters..
-    -- the secret should be same as GP cookie value
+    -- the postman secret should be same as GP cookie value
     local post_data_fields = "itemType=4&postman_secret=deadbeef&itemApiId=&itemId="..img_id.."&itemSecret="..secret
 
     table.insert(urls, {
