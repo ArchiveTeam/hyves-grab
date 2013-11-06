@@ -3,6 +3,7 @@ dofile("urlcode.lua")
 local url_count = 0
 local new_url_count = 0
 local hyves_username = os.getenv("hyves_username")
+local photo_urls = {}
 
 read_file = function(file)
   if file then
@@ -58,8 +59,8 @@ add_urls_from_pager = function(html, urls, hostname, current_url)
   local extra = string.match(html, "extra:%s*'([^']+)'")
 
   if not name or not num_pages or not extra then
-    io.stdout:write("\nPager not found: url="..current_url.." name="..tostring(name).." num_pages="..tostring(num_pages).." extra="..tostring(extra).."\n")
-    io.stdout:flush()
+--    io.stdout:write("\nPager not found: url="..current_url.." name="..tostring(name).." num_pages="..tostring(num_pages).." extra="..tostring(extra).."\n")
+--    io.stdout:flush()
     return
   end
 
@@ -138,6 +139,15 @@ wget.callbacks.get_urls = function(file, url, is_css, iri)
       html = read_file(file)
     end
     add_urls_from_pager(html, urls, hostname, url)
+
+    -- Whitelist the photo urls to be downloaded
+    if string.match(url, "hyves.nl/fotos/") or string.match(url, "hyves.nl/photos/") then
+      for requisite_url in string.gmatch(html, "=['\"](http[%w%.:/-]+hyves%-static%.net[^'\"]+)['\"]") do
+--        io.stdout:write("\nFound photo url="..requisite_url.."\n")
+--        io.stdout:flush()
+        photo_urls[requisite_url] = true
+      end
+    end
   end
 
   -- TODO: check to see if we need to paginate other stuff
@@ -154,14 +164,22 @@ wget.callbacks.get_urls = function(file, url, is_css, iri)
       --      io.stdout:write("\nPager new url="..requisite_url.."\n")
       --      io.stdout:flush()
       new_url_count = new_url_count + 1
+
+      -- Whitelist the photo url to be downloaded.
+      if string.match(url, "albumlistwithpreview") then
+--        io.stdout:write("\nFound photo url="..requisite_url.."\n")
+--        io.stdout:flush()
+        photo_urls[requisite_url] = true
+      end
     end
   end
 
   -- Grab large size photos (change 16 into a 6 ???) from photo album only.
-  -- TODO: check referer to see if we are coming from an album and not from a
+  -- We check the table to see if we are coming from an album and not from a
   -- photo comment page. Getting the comment page on an image from a comment
   -- page would be recursion across users.
-  if string.match(url, "http://[0-9].media.hyves%-static.net/[0-9]+/16/[%w_-]+/[0-9]+/[%w.]+") then
+  if string.match(url, "http://[0-9].media.hyves%-static.net/[0-9]+/16/[%w_-]+/[0-9]+/[%w.]+") and
+  photo_urls[url] then
     local hostnum, img_id, secret, something, filename = string.match(url, "http://([0-9]).media.hyves%-static.net/([0-9]+)/16/([%w_-]+)/([0-9]+)/([%w.]+)")
     local photo_url = "http://"..hostnum..".media.hyves-static.net/"..img_id.."/6/"..secret.."/"..something.."/"..filename
     table.insert(urls, { url=photo_url })
