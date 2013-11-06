@@ -78,6 +78,32 @@ def fetch_content_page(username, category_name):
         sleep()
 
 
+def fetch_main_content_page(username, pager_name):
+    print 'Fetch', username, pager_name
+
+    headers = {
+        'User-Agent': user_agent
+    }
+    url = 'http://{}.hyves.nl/'.format(username, category_name)
+    request = urllib2.Request(url, headers=headers)
+    response = urllib2.urlopen(request)
+    content = response.read()
+
+    pager_params = scrape_pager(content)
+
+    yield content
+
+    print 'Pages=', pager_params['num_pages'], 'Name=', pager_name
+
+    for page_num in xrange(1, pager_params['num_pages'] + 1):
+        print 'Page', page_num
+        content = pager('{}.hyves.nl'.format(username), pager_name,
+            page_num, pager_params['extra'])
+        yield content
+        sleep()
+
+
+
 if __name__ == '__main__':
     username = sys.argv[1]
     filename = sys.argv[2]
@@ -90,3 +116,9 @@ if __name__ == '__main__':
             except urllib2.HTTPError:
                 traceback.print_exc(limit=1)
 
+    with open('{}.hyves.txt'.format(filename), 'w') as out_file:
+        try:
+            for content in fetch_main_content_page(username, 'publicgroups_default_redesign'):
+                out_file.write(content)
+        except urllib2.HTTPError:
+            traceback.print_exc(limit=1)

@@ -101,6 +101,7 @@ class PrepareDirectories(SimpleTask):
 
         open("%(item_dir)s/%(warc_file_base)s.vrienden.txt" % item, "w").close()
         open("%(item_dir)s/%(warc_file_base)s.leden.txt" % item, "w").close()
+        open("%(item_dir)s/%(warc_file_base)s.hyves.txt" % item, "w").close()
 
 
 class MoveFiles(SimpleTask):
@@ -112,6 +113,8 @@ class MoveFiles(SimpleTask):
             "%(data_dir)s/%(warc_file_base)s.vrienden.txt" % item)
         os.rename("%(item_dir)s/%(warc_file_base)s.leden.txt" % item,
             "%(data_dir)s/%(warc_file_base)s.leden.txt" % item)
+        os.rename("%(item_dir)s/%(warc_file_base)s.hyves.txt" % item,
+            "%(data_dir)s/%(warc_file_base)s.hyves.txt" % item)
 
         shutil.rmtree("%(item_dir)s" % item)
 
@@ -148,7 +151,8 @@ pipeline = Pipeline(
         file_groups={
             "data": [ 
                 ItemInterpolation("%(item_dir)s/%(warc_file_base)s.vrienden.txt"),
-                ItemInterpolation("%(item_dir)s/%(warc_file_base)s.leden.txt") 
+                ItemInterpolation("%(item_dir)s/%(warc_file_base)s.leden.txt"),
+                ItemInterpolation("%(item_dir)s/%(warc_file_base)s.hyves.txt")
             ]
         }
     ),
@@ -162,7 +166,8 @@ pipeline = Pipeline(
             version=VERSION,
             files=[
                 ItemInterpolation("%(data_dir)s/%(warc_file_base)s.vrienden.txt"),
-                ItemInterpolation("%(data_dir)s/%(warc_file_base)s.leden.txt")
+                ItemInterpolation("%(data_dir)s/%(warc_file_base)s.leden.txt"),
+                ItemInterpolation("%(data_dir)s/%(warc_file_base)s.hyves.txt")
             ],
             rsync_target_source_path=ItemInterpolation("%(data_dir)s/"),
             rsync_extra_args=[
