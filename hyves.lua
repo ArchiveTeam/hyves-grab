@@ -59,8 +59,8 @@ add_urls_from_pager = function(html, urls, hostname, current_url)
   local extra = string.match(html, "extra:%s*'([^']+)'")
 
   if not name or not num_pages or not extra then
---    io.stdout:write("\nPager not found: url="..current_url.." name="..tostring(name).." num_pages="..tostring(num_pages).." extra="..tostring(extra).."\n")
---    io.stdout:flush()
+    -- io.stdout:write("\nPager not found: url="..current_url.." name="..tostring(name).." num_pages="..tostring(num_pages).." extra="..tostring(extra).."\n")
+    -- io.stdout:flush()
     return
   end
 
@@ -82,6 +82,39 @@ add_urls_from_pager = function(html, urls, hostname, current_url)
   end
 end
 
+add_urls_from_pager_main_page = function(html, urls, hostname, pager_name, current_url)
+  local pager_pattern_name = pager_name:gsub("%-", "-")
+  local num_pages, extra = string.match(html, "name:%s*'"..pager_pattern_name.."'.-nrPages:%s*([0-9]+).-extra:%s*'([^']+)'")
+  num_pages = tonumber(num_pages)
+
+  if not num_pages or not extra then
+    -- io.stdout:write("\nPager not found: url="..current_url.." name="..tostring(pager_name).." num_pages="..tostring(num_pages).." extra="..tostring(extra).."\n")
+    -- io.stdout:flush()
+    return
+  end
+
+  -- io.stdout:write("\nPager found: url="..current_url.." name="..tostring(pager_name).." num_pages="..tostring(num_pages).." extra="..tostring(extra).."\n")
+  -- io.stdout:flush()
+
+  for page_number in range(1, num_pages) do
+
+    local fields = {}
+
+    fields["pageNr"] = page_number
+    fields["config"] = "hyvespager-config.php"
+    fields["showReadMoreLinks"] = "false"
+    fields["extra"] = extra
+
+    table.insert(urls, {
+      url="http://"..hostname.."/index.php?xmlHttp=1&module=pager&action=showPage&name="..pager_name,
+      post_data=cgilua.urlcode.encodetable(fields)
+    })
+
+    new_url_count = new_url_count + 1
+  end
+
+end
+
 wget.callbacks.download_child_p = function(urlpos, parent, depth, start_url_parsed, iri, verdict, reason)
   if verdict then
     local sleep_time = 0.75 * (math.random(50, 150) / 100.0)
@@ -92,8 +125,8 @@ wget.callbacks.download_child_p = function(urlpos, parent, depth, start_url_pars
     end
 
     if sleep_time > 0.001 then
-      --    io.stdout:write("\nSleeping=".. sleep_time .." url="..urlpos["url"]["url"].." verdict="..tostring(verdict).."\n")
-      --    io.stdout:flush()
+      -- io.stdout:write("\nSleeping=".. sleep_time .." url="..urlpos["url"]["url"].." verdict="..tostring(verdict).."\n")
+      -- io.stdout:flush()
       os.execute("sleep " .. sleep_time)
     end
   end
@@ -143,14 +176,21 @@ wget.callbacks.get_urls = function(file, url, is_css, iri)
     -- Whitelist the photo urls to be downloaded
     if string.match(url, "hyves.nl/fotos/") or string.match(url, "hyves.nl/photos/") then
       for requisite_url in string.gmatch(html, "=['\"](http[%w%.:/-]+hyves%-static%.net[^'\"]+)['\"]") do
---        io.stdout:write("\nFound photo url="..requisite_url.."\n")
---        io.stdout:flush()
+        --        io.stdout:write("\nFound photo url="..requisite_url.."\n")
+        --        io.stdout:flush()
         photo_urls[requisite_url] = true
       end
     end
   end
 
-  -- TODO: check to see if we need to paginate other stuff
+  -- paginate the hyves (group memberships) (publicgroups_default_redesign)
+  if string.match(url, "hyves.nl/$") then
+    if not html then
+      html = read_file(file)
+    end
+
+    add_urls_from_pager_main_page(html, urls, hostname, "publicgroups_default_redesign", url)
+  end
 
   -- scrape out the urls from the html fragment from the pagination request
   -- or urls from the html fragment of the photo comments
@@ -161,14 +201,14 @@ wget.callbacks.get_urls = function(file, url, is_css, iri)
     end
     for requisite_url in string.gmatch(html, "=['\"](http[%w%.:/-]+hyves%-static%.net[^'\"]+)['\"]") do
       table.insert(urls, { url=requisite_url })
-      --      io.stdout:write("\nPager new url="..requisite_url.."\n")
-      --      io.stdout:flush()
+      -- io.stdout:write("\nPager new url="..requisite_url.."\n")
+      -- io.stdout:flush()
       new_url_count = new_url_count + 1
 
       -- Whitelist the photo url to be downloaded.
       if string.match(url, "albumlistwithpreview") then
---        io.stdout:write("\nFound photo url="..requisite_url.."\n")
---        io.stdout:flush()
+        -- io.stdout:write("\nFound photo url="..requisite_url.."\n")
+        -- io.stdout:flush()
         photo_urls[requisite_url] = true
       end
     end
