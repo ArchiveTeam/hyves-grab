@@ -30,11 +30,27 @@ def pager(hostname, name, page_number, extra):
         'User-Agent': user_agent
     }
 
-    request = urllib2.Request(url, urllib.urlencode(post_data), headers)
+    for dummy in xrange(10):
+        try:
+            request = urllib2.Request(url, urllib.urlencode(post_data), headers)
+            response = urllib2.urlopen(request)
+            content = response.read()
+        except urllib2.HTTPError as error:
+            status_code = error.code
+        else:
+            status_code = response.getcode()
 
-    response = urllib2.urlopen(request)
+        if status_code == 403 or 'Try again in a moment' in content:
+            sleep_time = 10
+            print 'Hyves angered (code', status_code, ') Sleep for', sleep_time, 'seconds.'
+            time.sleep(sleep_time)
+        elif status_code != 200:
+            print 'Unexpected error. (code', status_code, '.) Retrying.'
+            sleep(seconds=5)
+        else:
+            return content
 
-    return response.read()
+    raise Exception('Unable to fetch page')
 
 
 def scrape_pager(content):
