@@ -215,6 +215,7 @@ wget.callbacks.get_urls = function(file, url, is_css, iri)
   end
 
   -- Grab large size photos (change 16 into a 6 ???) from photo album only.
+  -- Grab videos (change 16 to a 7 and change extension to flv)
   -- We check the table to see if we are coming from an album and not from a
   -- photo comment page. Getting the comment page on an image from a comment
   -- page would be recursion across users.
@@ -224,6 +225,10 @@ wget.callbacks.get_urls = function(file, url, is_css, iri)
     local photo_url = "http://"..hostnum..".media.hyves-static.net/"..img_id.."/6/"..secret.."/"..something.."/"..filename
     table.insert(urls, { url=photo_url })
     new_url_count = new_url_count + 1
+
+    -- It might be a video, so try to grab that as well
+    local video_url = "http://"..hostnum..".media.hyves-static.net/"..img_id.."/7/"..secret.."/"..something.."/"..filename:gsub("jpeg", "flv")
+    table.insert(urls, { url=video_url })
 
     -- grab the html fragment containing the photo comments and the "respects"
     local photo_meta_url = "http://"..hyves_username..".hyves.nl/?module=PhotoBrowser&action=postGetSocialPage"
