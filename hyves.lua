@@ -167,7 +167,11 @@ wget.callbacks.get_urls = function(file, url, is_css, iri)
   -- paginate the group members (quickfinder_hub_members)
   string.match(url, "hyves.nl/leden/") or string.match(url, "hyves.nl/members/") or
   -- paginate the blog (blog_mainbody / hub_content)
-  string.match(url, "hyves.nl/blog/") then
+  string.match(url, "hyves.nl/blog/") or
+  -- paginate the whowhatwhere (hub_content)
+  string.match(url, "hyves.nl/wiewatwaar/") or string.match(url, "hyves.nl/whowhatwhere/") or
+  -- paginate the forum (hub_threadlist)
+  string.match(url, "hyves.nl/forum/") then
     if not html then
       html = read_file(file)
     end
