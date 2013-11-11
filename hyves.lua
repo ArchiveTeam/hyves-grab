@@ -83,7 +83,7 @@ add_urls_from_pager = function(html, urls, hostname, current_url)
 end
 
 add_urls_from_pager_main_page = function(html, urls, hostname, pager_name, current_url)
-  local pager_pattern_name = pager_name:gsub("%-", "-")
+  local pager_pattern_name = pager_name:gsub("%-", "%%-")
   local num_pages, extra = string.match(html, "name:%s*'"..pager_pattern_name.."'.-nrPages:%s*([0-9]+).-extra:%s*'([^']+)'")
   num_pages = tonumber(num_pages)
 
@@ -151,7 +151,7 @@ end
 wget.callbacks.get_urls = function(file, url, is_css, iri)
   -- progress message
   url_count = url_count + 1
-  if url_count % 5 == 0 then
+  if url_count % 2 == 0 then
     io.stdout:write("\r - Downloaded "..url_count.." URLs. Discovered "..new_url_count.." URLs.")
     io.stdout:flush()
   end
@@ -180,8 +180,8 @@ wget.callbacks.get_urls = function(file, url, is_css, iri)
     -- Whitelist the photo urls to be downloaded
     if string.match(url, "hyves.nl/fotos/") or string.match(url, "hyves.nl/photos/") then
       for requisite_url in string.gmatch(html, "=['\"](http[%w%.:/-]+hyves%-static%.net[^'\"]+)['\"]") do
-        --        io.stdout:write("\nFound photo url="..requisite_url.."\n")
-        --        io.stdout:flush()
+        -- io.stdout:write("\nFound photo url="..requisite_url.."\n")
+        -- io.stdout:flush()
         photo_urls[requisite_url] = true
       end
     end
@@ -203,9 +203,20 @@ wget.callbacks.get_urls = function(file, url, is_css, iri)
     if not html then
       html = read_file(file)
     end
-    for requisite_url in string.gmatch(html, "=['\"](http[%w%.:/-]+hyves%-static%.net[^'\"]+)['\"]") do
+
+    -- links
+    local hyves_username_pattern = hyves_username:gsub("%-", "%%-")
+    for requisite_url in string.gmatch(html, "=['\"](https?://"..hyves_username_pattern.."%.hyves%.nl/[^'\"]+)['\"]") do
       table.insert(urls, { url=requisite_url })
       -- io.stdout:write("\nPager new url="..requisite_url.."\n")
+      -- io.stdout:flush()
+      new_url_count = new_url_count + 1
+    end
+
+    -- photos
+    for requisite_url in string.gmatch(html, "=['\"](http[%w%.:/-]+hyves%-static%.net[^'\"]+)['\"]") do
+      table.insert(urls, { url=requisite_url })
+      -- io.stdout:write("\nPager new media url="..requisite_url.."\n")
       -- io.stdout:flush()
       new_url_count = new_url_count + 1
 
