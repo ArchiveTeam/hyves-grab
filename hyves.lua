@@ -164,6 +164,8 @@ wget.callbacks.get_urls = function(file, url, is_css, iri)
   if string.match(url, "hyves.nl/vrienden/") or string.match(url, "hyves.nl/friends/") or
   -- paginate the photos (albumlistwithpreview)
   string.match(url, "hyves.nl/fotos/") or string.match(url, "hyves.nl/photos/") or
+  -- paginate the photo album (fr_it_ph_list_redesign)
+  string.match(url, "hyves.nl/album/") or
   -- paginate the group members (quickfinder_hub_members)
   string.match(url, "hyves.nl/leden/") or string.match(url, "hyves.nl/members/") or
   -- paginate the blog (blog_mainbody / hub_content)
@@ -176,15 +178,6 @@ wget.callbacks.get_urls = function(file, url, is_css, iri)
       html = read_file(file)
     end
     add_urls_from_pager(html, urls, hostname, url)
-
-    -- Whitelist the photo urls to be downloaded
-    if string.match(url, "hyves.nl/fotos/") or string.match(url, "hyves.nl/photos/") then
-      for requisite_url in string.gmatch(html, "=['\"](http[%w%.:/-]+hyves%-static%.net[^'\"]+)['\"]") do
-        -- io.stdout:write("\nFound photo url="..requisite_url.."\n")
-        -- io.stdout:flush()
-        photo_urls[requisite_url] = true
-      end
-    end
   end
 
   -- paginate the hyves (group memberships) (publicgroups_default_redesign)
@@ -194,6 +187,21 @@ wget.callbacks.get_urls = function(file, url, is_css, iri)
     end
 
     add_urls_from_pager_main_page(html, urls, hostname, "publicgroups_default_redesign", url)
+  end
+
+  -- Whitelist the photo urls to be downloaded
+  if string.match(url, "hyves.nl/fotos/") or
+  string.match(url, "hyves.nl/photos/") or
+  string.match(url, "hyves.nl/album/") then
+    if not html then
+      html = read_file(file)
+    end
+
+    for requisite_url in string.gmatch(html, "=['\"](http[%w%.:/-]+hyves%-static%.net[^'\"]+)['\"]") do
+      -- io.stdout:write("\nFound photo url="..requisite_url.."\n")
+      -- io.stdout:flush()
+      photo_urls[requisite_url] = true
+    end
   end
 
   -- scrape out the urls from the html fragment from the pagination request
@@ -221,7 +229,7 @@ wget.callbacks.get_urls = function(file, url, is_css, iri)
       new_url_count = new_url_count + 1
 
       -- Whitelist the photo url to be downloaded.
-      if string.match(url, "albumlistwithpreview") then
+      if string.match(url, "albumlistwithpreview") or string.match(url, "fr_it_ph_list_redesign") then
         -- io.stdout:write("\nFound photo url="..requisite_url.."\n")
         -- io.stdout:flush()
         photo_urls[requisite_url] = true
