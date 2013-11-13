@@ -91,7 +91,7 @@ if not WGET_LUA:
 #
 # Update this each time you make a non-cosmetic change.
 # It will be added to the WARC files and reported to the tracker.
-VERSION = "20131111.01"
+VERSION = "20131113.00"
 USER_AGENT = "Mozilla/5.0 (Windows NT 6.1; WOW64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/30.0.1599.101 Safari/537.36"
 TRACKER_ID = 'hyves'
 TRACKER_HOST = 'tracker.archiveteam.org'
@@ -168,7 +168,7 @@ pipeline = Pipeline(
         "--recursive", "--level=inf",
         "--page-requisites",
         "--timeout", "60",
-        "--tries", "20",
+        "--tries", "inf",
         "--random-wait",
         "--span-hosts",
         "--no-cookies", "--header", "Cookie: GP=deadbeef",

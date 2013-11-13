@@ -4,6 +4,7 @@ local url_count = 0
 local new_url_count = 0
 local hyves_username = os.getenv("hyves_username")
 local photo_urls = {}
+local tries = 0
 
 read_file = function(file)
   if file then
@@ -137,14 +138,29 @@ end
 wget.callbacks.httploop_result = function(url, err, http_stat)
   local html = read_file_short(http_stat["local_file"])
   local sleep_time = 10
+  local status_code = http_stat["statcode"]
 
-  if string.match(html, "Try again in a moment") then
+  -- not sure why checking the message didn't work
+  -- string.match(html, "Try again in a moment") or
+
+  -- Checking status code might be a problem if the page is errorring
+  -- due to unrelated issues
+  if status_code == 500 then
     io.stdout:write("\nHyves angered (code "..http_stat.statcode.."). Sleeping for ".. sleep_time .." seconds.\n")
     io.stdout:flush()
+
+    if tries > 9000 then
+      io.stdout:write("\nLikely banned. Giving up.\n")
+      io.stdout:flush()
+      return wget.actions.ABORT
+    end
+
     os.execute("sleep " .. sleep_time)
+    tries = tries + 1
     return wget.actions.CONTINUE
   end
 
+  tries = 0
   return wget.actions.NOTHING
 end
 
