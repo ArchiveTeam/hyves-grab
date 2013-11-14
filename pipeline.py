@@ -91,7 +91,7 @@ if not WGET_LUA:
 #
 # Update this each time you make a non-cosmetic change.
 # It will be added to the WARC files and reported to the tracker.
-VERSION = "20131113.00"
+VERSION = "20131114.00"
 USER_AGENT = "Mozilla/5.0 (Windows NT 6.1; WOW64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/30.0.1599.101 Safari/537.36"
 TRACKER_ID = 'hyves'
 TRACKER_HOST = 'tracker.archiveteam.org'
@@ -135,6 +135,39 @@ class MoveFiles(SimpleTask):
         shutil.rmtree("%(item_dir)s" % item)
 
 
+wget_args = [
+    WGET_LUA,
+    "-U", USER_AGENT,
+    "-nv",
+    "-o", ItemInterpolation("%(item_dir)s/wget.log"),
+    "--lua-script", "hyves.lua",
+    "--no-check-certificate",
+    "--output-document", ItemInterpolation("%(item_dir)s/wget.tmp"),
+    "--truncate-output",
+    "-e", "robots=off",
+    "--rotate-dns",
+    "--recursive", "--level=inf",
+    "--page-requisites",
+    "--timeout", "60",
+    "--tries", "inf",
+    "--random-wait",
+    "--span-hosts",
+    "--no-cookies", "--header", "Cookie: GP=deadbeef",
+    "--domains", ItemInterpolation("%(item_name)s.hyves.nl,hyves-static.net"),
+    "--warc-file", ItemInterpolation("%(item_dir)s/%(warc_file_base)s"),
+    "--warc-header", "operator: Archive Team",
+    "--warc-header", "hyves-dld-script-version: " + VERSION,
+    "--warc-header", ItemInterpolation("hyves-user: %(item_name)s"),
+    ItemInterpolation("http://%(item_name)s.hyves.nl/")
+]
+
+if 'bind_address' in globals():
+    wget_args.extend(['--bind-address', globals()['bind_address']])
+    print('')
+    print('*** Wget will bind address at {0} ***'.format(globals()['bind_address']))
+    print('')
+
+
 ###########################################################################
 # Initialize the project.
 #
@@ -154,31 +187,8 @@ pipeline = Pipeline(
     GetItemFromTracker("http://%s/%s" % (TRACKER_HOST, TRACKER_ID), downloader,
         VERSION),
     PrepareDirectories(warc_prefix="hyves"),
-    WgetDownload([
-        WGET_LUA,
-        "-U", USER_AGENT,
-        "-nv",
-        "-o", ItemInterpolation("%(item_dir)s/wget.log"),
-        "--lua-script", "hyves.lua",
-        "--no-check-certificate",
-        "--output-document", ItemInterpolation("%(item_dir)s/wget.tmp"),
-        "--truncate-output",
-        "-e", "robots=off",
-        "--rotate-dns",
-        "--recursive", "--level=inf",
-        "--page-requisites",
-        "--timeout", "60",
-        "--tries", "inf",
-        "--random-wait",
-        "--span-hosts",
-        "--no-cookies", "--header", "Cookie: GP=deadbeef",
-        "--domains", ItemInterpolation("%(item_name)s.hyves.nl,hyves-static.net"),
-        "--warc-file", ItemInterpolation("%(item_dir)s/%(warc_file_base)s"),
-        "--warc-header", "operator: Archive Team",
-        "--warc-header", "hyves-dld-script-version: " + VERSION,
-        "--warc-header", ItemInterpolation("hyves-user: %(item_name)s"),
-        ItemInterpolation("http://%(item_name)s.hyves.nl/")
-        ],
+    WgetDownload(
+        wget_args,
         max_tries=5,
         accept_on_exit_code=[0, 8],
         env={'hyves_username': ItemInterpolation("%(item_name)s")}
