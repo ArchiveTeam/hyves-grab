@@ -149,11 +149,12 @@ wget.callbacks.httploop_result = function(url, err, http_stat)
     io.stdout:write("\nHyves angered (code "..http_stat.statcode.."). Sleeping for ".. sleep_time .." seconds.\n")
     io.stdout:flush()
 
-    if tries > 9000 then
-      io.stdout:write("\nLikely banned. Giving up.\n")
-      io.stdout:flush()
-      return wget.actions.ABORT
-    end
+-- if joepie91 wants infinite tries, then joepie91 gets infinite tries
+--    if tries > 9000 then
+--      io.stdout:write("\nLikely banned. Giving up.\n")
+--      io.stdout:flush()
+--      return wget.actions.ABORT
+--    end
 
     os.execute("sleep " .. sleep_time)
     tries = tries + 1
