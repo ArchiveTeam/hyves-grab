@@ -59,6 +59,9 @@ add_urls_from_pager = function(html, urls, hostname, current_url)
   local num_pages = tonumber(string.match(html, "nrPages:%s*([0-9]+)"))
   local extra = string.match(html, "extra:%s*'([^']+)'")
 
+  io.stdout:write("\n  Pager: url="..current_url.." name="..tostring(name).." num_pages="..tostring(num_pages).."\n")
+  io.stdout:flush()
+
   if not name or not num_pages or not extra then
     -- io.stdout:write("\nPager not found: url="..current_url.." name="..tostring(name).." num_pages="..tostring(num_pages).." extra="..tostring(extra).."\n")
     -- io.stdout:flush()
@@ -87,6 +90,9 @@ add_urls_from_pager_main_page = function(html, urls, hostname, pager_name, curre
   local pager_pattern_name = pager_name:gsub("%-", "%%-")
   local num_pages, extra = string.match(html, "name:%s*'"..pager_pattern_name.."'.-nrPages:%s*([0-9]+).-extra:%s*'([^']+)'")
   num_pages = tonumber(num_pages)
+  
+  io.stdout:write("\n  Pager: url="..current_url.." name="..tostring(pager_name).." num_pages="..tostring(num_pages).."\n")
+  io.stdout:flush()
 
   if not num_pages or not extra then
     -- io.stdout:write("\nPager not found: url="..current_url.." name="..tostring(pager_name).." num_pages="..tostring(num_pages).." extra="..tostring(extra).."\n")
@@ -137,7 +143,7 @@ end
 
 wget.callbacks.httploop_result = function(url, err, http_stat)
   local html = read_file_short(http_stat["local_file"])
-  local sleep_time = 10
+  local sleep_time = 20
   local status_code = http_stat["statcode"]
 
   -- not sure why checking the message didn't work
@@ -156,6 +162,7 @@ wget.callbacks.httploop_result = function(url, err, http_stat)
 --      return wget.actions.ABORT
 --    end
 
+    -- Note that wget has its own exponential backoff to this time as well
     os.execute("sleep " .. sleep_time)
     tries = tries + 1
     return wget.actions.CONTINUE
@@ -177,33 +184,28 @@ wget.callbacks.get_urls = function(file, url, is_css, iri)
   local html = nil
   local hostname = string.match(url, "http://([^/]+)")
 
-  -- paginate the friends (quickfinder_member_friends)
-  if string.match(url, "hyves.nl/vrienden/") or string.match(url, "hyves.nl/friends/") or
-  -- paginate the photos (albumlistwithpreview)
-  string.match(url, "hyves.nl/fotos/") or string.match(url, "hyves.nl/photos/") or
-  -- paginate the photo album (fr_it_ph_list_redesign)
-  string.match(url, "hyves.nl/album/") or
-  -- paginate the group members (quickfinder_hub_members)
-  string.match(url, "hyves.nl/leden/") or string.match(url, "hyves.nl/members/") or
-  -- paginate the blog (blog_mainbody / hub_content)
-  string.match(url, "hyves.nl/blog/") or
-  -- paginate the whowhatwhere (hub_content)
-  string.match(url, "hyves.nl/wiewatwaar/") or string.match(url, "hyves.nl/whowhatwhere/") or
-  -- paginate the forum (hub_threadlist)
-  string.match(url, "hyves.nl/forum/") then
+  -- paginate all the things!
+  if string.match(url, "hyves.nl/[%w_-]+/?$") then
     if not html then
       html = read_file(file)
     end
+    io.stdout:write("\n  Trying to paginate "..string.match(url, "hyves.nl/([%w_-]+)/?$").."\n")
+    io.stdout:flush()
     add_urls_from_pager(html, urls, hostname, url)
   end
 
-  -- paginate the hyves (group memberships) (publicgroups_default_redesign)
+  -- paginate all the things on homepage!
   if string.match(url, "hyves.nl/$") then
     if not html then
       html = read_file(file)
     end
+    
+    for page_name in string.gmatch(html, "name:%s*'([^']+)'") do
+      io.stdout:write("\n  Trying to paginate "..page_name.."\n")
+      io.stdout:flush()
 
-    add_urls_from_pager_main_page(html, urls, hostname, "publicgroups_default_redesign", url)
+      add_urls_from_pager_main_page(html, urls, hostname, page_name, url)
+    end
   end
 
   -- Whitelist the photo urls to be downloaded
