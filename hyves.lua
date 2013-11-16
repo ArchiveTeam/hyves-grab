@@ -54,6 +54,15 @@ function range(a, b, step)
   return f, nil, a - step
 end
 
+-- http://stackoverflow.com/a/14899740/1524507
+function html_unescape(str)
+  local map={ ["lt"]="<", ["gt"]=">", ["amp"]="&", ["quot"]='"', ["apos"]="'" }
+  str = string.gsub( str, '(&(#?)([%d%a]+);)', function(orig,n,s)
+    return map[s] or n=="#" and string.char(s) or orig
+  end )
+  return str
+end
+
 add_urls_from_pager = function(html, urls, hostname, current_url)
   local name = string.match(html, "name:%s*'([^']+)'")
   local num_pages = tonumber(string.match(html, "nrPages:%s*([0-9]+)"))
@@ -243,7 +252,7 @@ wget.callbacks.get_urls = function(file, url, is_css, iri)
     -- links
     local hyves_username_pattern = hyves_username:gsub("%-", "%%-")
     for requisite_url in string.gmatch(html, "=['\"](https?://"..hyves_username_pattern.."%.hyves%.nl/[^'\"]+)['\"]") do
-      table.insert(urls, { url=requisite_url })
+      table.insert(urls, { url=html_unescape(requisite_url) })
       -- io.stdout:write("\nPager new url="..requisite_url.."\n")
       -- io.stdout:flush()
       new_url_count = new_url_count + 1
@@ -251,7 +260,7 @@ wget.callbacks.get_urls = function(file, url, is_css, iri)
 
     -- photos
     for requisite_url in string.gmatch(html, "=['\"](http[%w%.:/-]+hyves%-static%.net[^'\"]+)['\"]") do
-      table.insert(urls, { url=requisite_url })
+      table.insert(urls, { url=html_unescape(requisite_url) })
       -- io.stdout:write("\nPager new media url="..requisite_url.."\n")
       -- io.stdout:flush()
       new_url_count = new_url_count + 1
