@@ -130,6 +130,15 @@ wget.callbacks.download_child_p = function(urlpos, parent, depth, start_url_pars
       -- We should be able to go fast on images since that's what a web browser does
       sleep_time = 0
     end
+    
+    -- stop infinite loop
+    if string.match(parent["url"], "action=showMemberDetails&k=([%w_-])") ==
+    string.match(urlpos["url"]["url"], "action=showMemberDetails&k=([%w_-])") and
+    depth > 5 then
+      io.stdout:write("\nRejecting possible infinite loop (showMemberDetails)\n")
+      io.stdout:flush()
+      return false
+    end
 
     if sleep_time > 0.001 then
       -- io.stdout:write("\nSleeping=".. sleep_time .." url="..urlpos["url"]["url"].." verdict="..tostring(verdict).."\n")
