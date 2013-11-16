@@ -124,7 +124,7 @@ end
 
 wget.callbacks.download_child_p = function(urlpos, parent, depth, start_url_parsed, iri, verdict, reason)
   if verdict then
-    local sleep_time = 0.75 * (math.random(50, 150) / 100.0)
+    local sleep_time = 1.0 * (math.random(75, 125) / 100.0)
 
     if string.match(urlpos["url"]["url"], "hyves%-static.net") then
       -- We should be able to go fast on images since that's what a web browser does
