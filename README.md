@@ -39,9 +39,9 @@ This feature requires seesaw version 0.0.16 or greater. Use `pip install --upgra
 
 Use the `--context-value` argument to pass in `bind_address=123.4.5.6` (replace the IP address with your own).
 
-Example:
+Example of running 2 threads, no web interface, and Wget binding of IP address:
 
-    run-pipeline pipeline.py --concurrent 2 YOURNICKHERE --context-value bind_address=123.4.5.6
+    run-pipeline pipeline.py --concurrent 2 YOURNICKHERE --disable-web-server --context-value bind_address=123.4.5.6
 
 
 Distribution-specific setup
