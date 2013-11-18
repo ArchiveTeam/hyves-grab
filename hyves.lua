@@ -77,6 +77,9 @@ add_urls_from_pager = function(html, urls, hostname, current_url)
     return
   end
 
+  io.stdout:write("     ok\n")
+  io.stdout:flush()
+
   for page_number in range(1, num_pages) do
 
     local fields = {}
@@ -97,7 +100,7 @@ end
 
 add_urls_from_pager_main_page = function(html, urls, hostname, pager_name, current_url)
   local pager_pattern_name = pager_name:gsub("%-", "%%-")
-  local num_pages, extra = string.match(html, "name:%s*'"..pager_pattern_name.."'.-nrPages:%s*([0-9]+).-extra:%s*'([^']+)'")
+  local num_pages, extra = string.match(html, "name:%s*'"..pager_pattern_name.."'[^}]-nrPages:%s*([0-9]+)[^}]-extra:%s*'([^']+)'")
   num_pages = tonumber(num_pages)
   
   io.stdout:write("\n  Pager: url="..current_url.." name="..tostring(pager_name).." num_pages="..tostring(num_pages).."\n")
@@ -111,6 +114,9 @@ add_urls_from_pager_main_page = function(html, urls, hostname, pager_name, curre
 
   -- io.stdout:write("\nPager found: url="..current_url.." name="..tostring(pager_name).." num_pages="..tostring(num_pages).." extra="..tostring(extra).."\n")
   -- io.stdout:flush()
+
+  io.stdout:write("     ok\n")
+  io.stdout:flush()
 
   for page_number in range(1, num_pages) do
 
