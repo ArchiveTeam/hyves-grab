@@ -63,6 +63,11 @@ function html_unescape(str)
   return str
 end
 
+-- http://lua-users.org/wiki/StringTrim
+function trim1(s)
+  return (s:gsub("^%s*(.-)%s*$", "%1"))
+end
+
 add_urls_from_pager = function(html, urls, hostname, current_url)
   local name = string.match(html, "name:%s*'([^']+)'")
   local num_pages = tonumber(string.match(html, "nrPages:%s*([0-9]+)"))
@@ -229,6 +234,22 @@ wget.callbacks.get_urls = function(file, url, is_css, iri)
       io.stdout:flush()
 
       add_urls_from_pager_main_page(html, urls, hostname, page_name, url)
+    end
+
+    -- grab the music
+    for ue in string.gmatch(html, "ue:%s*'([a-zA-Z0-9/+]+)'") do
+      io.stdout:write("\n  ue: "..ue)
+
+      local p_file = assert(io.popen("./aplayer_swf.py "..ue, 'r'))
+      local ue_url = assert(p_file:read('*a'))
+      ue_url = trim1(ue_url)
+      p_file:close()
+
+      io.stdout:write("\n  music: "..ue_url.."\n")
+      io.stdout:flush()
+
+      table.insert(urls, { url=ue_url })
+      new_url_count = new_url_count + 1
     end
   end
 
