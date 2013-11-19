@@ -240,7 +240,7 @@ wget.callbacks.get_urls = function(file, url, is_css, iri)
     for ue in string.gmatch(html, "ue:%s*'([a-zA-Z0-9/+]+)'") do
       io.stdout:write("\n  ue: "..ue)
 
-      local p_file = assert(io.popen("./aplayer_swf.py "..ue, 'r'))
+      local p_file = assert(io.popen("python aplayer_swf.py "..ue, 'r'))
       local ue_url = assert(p_file:read('*a'))
       ue_url = trim1(ue_url)
       p_file:close()
