@@ -49,7 +49,7 @@ Distribution-specific setup
 ### For Debian/Ubuntu:
 
     adduser --system --group --shell /bin/bash archiveteam
-    apt-get install -y git-core libgnutls-dev lua5.1 liblua5.1-0 liblua5.1-0-dev screen python-pip bzip2
+    apt-get install -y git-core libgnutls-dev lua5.1 liblua5.1-0 liblua5.1-0-dev screen python-dev python-pip bzip2
     pip install seesaw
     su -c "cd /home/archiveteam; git clone https://github.com/ArchiveTeam/hyves-grab.git; cd hyves-grab; ./get-wget-lua.sh" archiveteam
     screen su -c "cd /home/archiveteam/hyves-grab/; run-pipeline pipeline.py --concurrent 2 --address '127.0.0.1' YOURNICKHERE" archiveteam
