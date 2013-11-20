@@ -276,9 +276,9 @@ wget.callbacks.get_urls = function(file, url, is_css, iri)
       html = read_file(file)
     end
 
-    -- links
+    -- links (match only href= and src= but not action=)
     local hyves_username_pattern = hyves_username:gsub("%-", "%%-")
-    for requisite_url in string.gmatch(html, "=['\"](https?://"..hyves_username_pattern.."%.hyves%.nl/[^'\"]+)['\"]") do
+    for requisite_url in string.gmatch(html, "[cf]=['\"](https?://"..hyves_username_pattern.."%.hyves%.nl/[^'\"]+)['\"]") do
       table.insert(urls, { url=html_unescape(requisite_url) })
       -- io.stdout:write("\nPager new url="..requisite_url.."\n")
       -- io.stdout:flush()
