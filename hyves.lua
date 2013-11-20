@@ -143,28 +143,13 @@ add_urls_from_pager_main_page = function(html, urls, hostname, pager_name, curre
 end
 
 wget.callbacks.download_child_p = function(urlpos, parent, depth, start_url_parsed, iri, verdict, reason)
-  if verdict then
-    local sleep_time = 1.0 * (math.random(75, 125) / 100.0)
-
-    if string.match(urlpos["url"]["url"], "hyves%-static.net") then
-      -- We should be able to go fast on images since that's what a web browser does
-      sleep_time = 0
-    end
-    
-    -- stop infinite loop
-    if string.match(parent["url"], "action=showMemberDetails&k=([%w_-])") ==
-    string.match(urlpos["url"]["url"], "action=showMemberDetails&k=([%w_-])") and
-    depth > 5 then
-      io.stdout:write("\nRejecting possible infinite loop (showMemberDetails)\n")
-      io.stdout:flush()
-      return false
-    end
-
-    if sleep_time > 0.001 then
-      -- io.stdout:write("\nSleeping=".. sleep_time .." url="..urlpos["url"]["url"].." verdict="..tostring(verdict).."\n")
-      -- io.stdout:flush()
-      os.execute("sleep " .. sleep_time)
-    end
+  -- stop infinite loop
+  if string.match(parent["url"], "action=showMemberDetails&k=([%w_-])") ==
+  string.match(urlpos["url"]["url"], "action=showMemberDetails&k=([%w_-])") and
+  depth > 5 then
+    io.stdout:write("\nRejecting possible infinite loop (showMemberDetails)\n")
+    io.stdout:flush()
+    return false
   end
 
   return verdict
@@ -175,30 +160,32 @@ wget.callbacks.httploop_result = function(url, err, http_stat)
   local sleep_time = 20
   local status_code = http_stat["statcode"]
 
-  -- not sure why checking the message didn't work
-  -- string.match(html, "Try again in a moment") or
-
   -- Checking status code might be a problem if the page is errorring
   -- due to unrelated issues
   if status_code == 500 then
     io.stdout:write("\nHyves angered (code "..http_stat.statcode.."). Sleeping for ".. sleep_time .." seconds.\n")
     io.stdout:flush()
 
--- if joepie91 wants infinite tries, then joepie91 gets infinite tries
---    if tries > 9000 then
---      io.stdout:write("\nLikely banned. Giving up.\n")
---      io.stdout:flush()
---      return wget.actions.ABORT
---    end
-
     -- Note that wget has its own exponential backoff to this time as well
     os.execute("sleep " .. sleep_time)
     tries = tries + 1
     return wget.actions.CONTINUE
-  end
+  else
+    -- We're okay; sleep a bit (if we have to) and continue
+    local sleep_time = 1.0 * (math.random(75, 125) / 100.0)
 
-  tries = 0
-  return wget.actions.NOTHING
+    if string.match(url["url"], "hyves%-static.net") then
+      -- We should be able to go fast on images since that's what a web browser does
+      sleep_time = 0
+    end
+
+    if sleep_time > 0.001 then
+      os.execute("sleep " .. sleep_time)
+    end
+
+    tries = 0
+    return wget.actions.NOTHING
+  end
 end
 
 wget.callbacks.get_urls = function(file, url, is_css, iri)
