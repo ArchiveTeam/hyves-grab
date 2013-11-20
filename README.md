@@ -59,7 +59,7 @@ Distribution-specific setup
 
 Ensure that you have the CentOS equivalent of bzip2 installed as well. You might need the EPEL repository to be enabled.
 
-    yum -y install gnutls-devel lua-devel python-pip
+    yum -y install gnutls-devel lua-devel python-pip zlib-devel
     pip install seesaw
     [... pretty much the same as above ...]
 
