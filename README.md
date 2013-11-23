@@ -3,6 +3,8 @@ hyves-grab
 
 More information about the archiving project can be found on the [ArchiveTeam wiki page for the project](http://archiveteam.org/index.php?title=Hyves)! This is phase 2.
 
+To prevent any issues with Hyves limiting you, keep it at 2 threads per IP
+
 
 
 Setup instructions
