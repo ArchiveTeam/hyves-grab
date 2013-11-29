@@ -91,7 +91,7 @@ if not WGET_LUA:
 #
 # Update this each time you make a non-cosmetic change.
 # It will be added to the WARC files and reported to the tracker.
-VERSION = "20131120.01"
+VERSION = "20131129.00"
 USER_AGENT = "Mozilla/5.0 (Windows NT 6.1; WOW64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/30.0.1599.101 Safari/537.36"
 TRACKER_ID = 'hyves'
 TRACKER_HOST = 'tracker.archiveteam.org'
@@ -109,7 +109,7 @@ class PrepareDirectories(SimpleTask):
         self.warc_prefix = warc_prefix
 
     def process(self, item):
-        item_name = item["item_name"]
+        item_name = item["item_name"].replace('/', '_')
         dirname = "/".join((item["data_dir"], item_name))
 
         if os.path.isdir(dirname):
@@ -133,6 +133,18 @@ class MoveFiles(SimpleTask):
               "%(data_dir)s/%(warc_file_base)s.warc.gz" % item)
 
         shutil.rmtree("%(item_dir)s" % item)
+
+
+def is_domain_site(item):
+    if item['item_name'].startswith('/'):
+        assert item['item_name'].endswith('/')
+        return False
+    else:
+        return True
+
+
+def is_not_domain_site(item):
+    return not is_domain_site(item)
 
 
 wget_args = [
@@ -160,8 +172,35 @@ wget_args = [
     ItemInterpolation("http://%(item_name)s.hyves.nl/")
 ]
 
+wget_args_not_domain = [
+    WGET_LUA,
+    "-U", USER_AGENT,
+    "-nv",
+    "-o", ItemInterpolation("%(item_dir)s/wget.log"),
+    "--lua-script", "hyves_not_domain.lua",
+    "--no-check-certificate",
+    "--output-document", ItemInterpolation("%(item_dir)s/wget.tmp"),
+    "--truncate-output",
+    "-e", "robots=off",
+    "--rotate-dns",
+    "--recursive", "--level=inf",
+    "--page-requisites",
+    "--timeout", "60",
+    "--tries", "inf",
+    "--span-hosts",
+    "--no-cookies", "--header", "Cookie: GP=deadbeef",
+    "--domains", ItemInterpolation("www.hyves.nl,hyves-static.net"),
+    "--warc-file", ItemInterpolation("%(item_dir)s/%(warc_file_base)s"),
+    "--no-parent",
+    "--warc-header", "operator: Archive Team",
+    "--warc-header", "hyves-dld-script-version: " + VERSION,
+    "--warc-header", ItemInterpolation("hyves-user: %(item_name)s"),
+    ItemInterpolation("http://www.hyves.nl%(item_name)s")
+]
+
 if 'bind_address' in globals():
     wget_args.extend(['--bind-address', globals()['bind_address']])
+    wget_args_not_domain.extend(['--bind-address', globals()['bind_address']])
     print('')
     print('*** Wget will bind address at {0} ***'.format(globals()['bind_address']))
     print('')
@@ -186,11 +225,23 @@ pipeline = Pipeline(
     GetItemFromTracker("http://%s/%s" % (TRACKER_HOST, TRACKER_ID), downloader,
         VERSION),
     PrepareDirectories(warc_prefix="hyves"),
-    WgetDownload(
-        wget_args,
-        max_tries=5,
-        accept_on_exit_code=[0, 8],
-        env={'hyves_username': ItemInterpolation("%(item_name)s")}
+    ConditionalTask(
+        is_domain_site,
+        WgetDownload(
+            wget_args,
+            max_tries=5,
+            accept_on_exit_code=[0, 8],
+            env={'hyves_username': ItemInterpolation("%(item_name)s")}
+        ),
+    ),
+    ConditionalTask(
+        is_not_domain_site,
+        WgetDownload(
+            wget_args_not_domain,
+            max_tries=5,
+            accept_on_exit_code=[0, 8],
+            env={'hyves_username': ItemInterpolation("%(item_name)s")}
+        ),
     ),
     PrepareStatsForTracker(
         defaults={ "downloader": downloader, "version": VERSION },
